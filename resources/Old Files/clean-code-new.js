@@ -1,79 +1,46 @@
-//v0.1
+function sleep(miliseconds) {
+   var currentTime = new Date().getTime();
 
-async function delay(millis) {
-    //console.log("slept");
-    return new Promise(resolve => setTimeout(resolve, millis));
+   while (currentTime + miliseconds >= new Date().getTime()) {};
 }
 
-const getMouseEvent = (mouseEventType, buttons) =>
-    new MouseEvent(mouseEventType, {
-        view: window,
-        bubbles: true,
-        cancelable: true,
-        buttons
-    });
-
-async function simulateClick(buttons, element, delayOverride) {
-  const mouseClickEvents = ['mousedown', 'click', 'mouseup'];
-  mouseClickEvents.forEach(mouseEventType => {
-      //console.log(mouseEventType);
-    element.dispatchEvent(getMouseEvent(mouseEventType, buttons));
-  });
-  return delay(200);
-  //await delay(2000);
+function custClickEvent(elemToClick, eventType, waitMS) {
+    var clickEvent = document.createEvent ('MouseEvents');
+    clickEvent.initEvent (eventType, true, true);
+    elemToClick.dispatchEvent (clickEvent);
+    sleep(waitMS);
 }
 
-function setNewValue(curBlock, newValue)
-{
-    var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
-    nativeInputValueSetter.call(curBlock, newValue);
-    var ev2 = new Event('input', { bubbles: true});
-    curBlock.dispatchEvent(ev2);
+function clickAllThree(elemToClick) {
+    var milliEachEvent = 200;
+    custClickEvent(elemToClick, "mousedown", milliEachEvent);
+    custClickEvent(elemToClick, "mouseup", milliEachEvent);
+    custClickEvent(elemToClick, "click", milliEachEvent);
 }
 
-async function testing(){
-    console.log("start");
-    await simulateClick(1, document.body, 0);
-    var allDivBlocks = document.querySelectorAll("[id*='body-outline']");
-    var element = allDivBlocks[0];
-
-    console.log("1");
-    await simulateClick(1, element, 0);
+function findTextArea() {
     var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
-    var newStuff = eachBlockTextArea.value + " ADDED ON END";
-    setNewValue(eachBlockTextArea, newStuff);
-
-    console.log("2");
-    element = allDivBlocks[1];
-    await simulateClick(1, element, 0);
-    var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
-    var newStuff = eachBlockTextArea.value + " ADDED ON END";
-    setNewValue(eachBlockTextArea, newStuff);
-
-    console.log("3");
-    element = allDivBlocks[2];
-    await simulateClick(1, element, 0);
-    var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
-    var newStuff = eachBlockTextArea.value + " ADDED ON END";
-    setNewValue(eachBlockTextArea, newStuff);
-
-    console.log("4");
-    element = allDivBlocks[3];
-    await simulateClick(1, element, 0);
-    var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
-    var newStuff = eachBlockTextArea.value + " ADDED ON END";
-    setNewValue(eachBlockTextArea, newStuff);
-
-    console.log("5");
-    console.log("END");
+    console.log('text area: ', eachBlockTextArea);
 }
 
-//testing();
+function getActiveEditElement() {
+    // stolen from Surfingkeys. Needs work.
 
-// ****************************************************************************************
-// ****************************************************************************************
-// ****************************************************************************************
-// ****************************************************************************************
+    let element = document.activeElement;
+    // on some pages like chrome://history/, input is in shadowRoot of several other recursive shadowRoots.
+    while (element?.shadowRoot) {
+        if (element.shadowRoot.activeElement) {
+            element = element.shadowRoot.activeElement;
+        } else {
+            const subElement = element.shadowRoot.querySelector('input, textarea, select');
+            if (subElement) {
+                element = subElement;
+            }
+            break;
+        }
+    }
+    return element;
+}
 
 var currentPage = document.title;
 
@@ -101,12 +68,13 @@ if(currentPage == 'All Pages')
 }
 else if(currentPage !== 'Daily Notes')
 {
-    await simulateClick(1, document.body, 0);
+    clickAllThree(document.body);
     //Loop through page with content you want to link
     //The roam-block class also matches linked references which we don't want to look through so we are filtering on ID with wildcard instead
-    //Each DIV holds each bullet and then the textarea html element is visible only when DIV is clicked
+    //Then get direct SPAN element which holds each bullet and then the textarea html element is visible only when SPAN is clicked
     //var allBlocks = document.getElementsByClassName("roam-block");
-    var allBlocks = document.querySelectorAll("[id*='body-outline']");
+    var allBlocks = document.querySelectorAll("[id*='body-outline'] > span");
+    //console.log(allBlocks);
     var arrPageContentBlocks = [];
     //Var total text on page
     var allTextContent = "";
@@ -114,18 +82,42 @@ else if(currentPage !== 'Daily Notes')
     var blockCtr = 0;
     for (var i = 0; i < allBlocks.length; i++)
     {
-        var eachBlockDiv = allBlocks.item(i);
-        //console.log(eachBlockDiv);
-        if(eachBlockDiv !== null)
+        var eachBlockSpan = allBlocks.item(i);
+        console.log(eachBlockSpan);
+        if(eachBlockSpan !== null)
         {
-            await simulateClick(1, eachBlockDiv, 0);
-            var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
-            var curValue = eachBlockTextArea.value.toString().trim();
-            //var newStuff = curValue + " ADDED ON END";
-            //var eachBlockText = eachBlockTextArea.value;
+            clickAllThree(eachBlockSpan);
+            sleep(3000);
+            findTextArea();
+            //var eachBlockTextArea = document.activeElement;
+            //console.log('before1: ', eachBlockTextArea);
+            //eachBlockTextArea = getActiveEditElement();
+            //console.log('before2: ', eachBlockTextArea);
+            //var tempPrompt = Number(prompt('Continue', 0));
+            //var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
+            //var tempPrompt = Number(prompt('Continue', 0));
+            //console.log('before3: ', eachBlockTextArea);
+            //console.log('before3: ', eachBlockTextArea[0]);
+            //console.log('before3: ', eachBlockTextArea.item(1));
+            sleep(3000);
 
-            arrPageContentBlocks.push(curValue);
-            allTextContent += curValue + ' \n';
+            //eachBlockTextArea = document.querySelectorAll(".rm-block-input");
+            //console.log('before4: ', eachBlockTextArea.item(1));
+            //console.log('after: ', eachBlockTextArea);
+            //console.log('Active element: ',eachBlockTextArea);
+            //console.log('tag: ',eachBlockTextArea.tagName.toLocaleLowerCase());
+            //var eachBlockText = eachBlockTextArea.value;
+            //console.log('text value: ', eachBlockText);
+            //arrPageContentBlocks.push(eachBlockText.toString());
+            //allTextContent += eachBlockText.toString().trim() + ' \n';
+            //console.log('Current text: ',eachBlockText);
+            /*
+            var newText = `BEFORE ${eachBlockText} AFTER`;
+            var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+            nativeInputValueSetter.call(eachBlockTextArea, newText);
+            var ev2 = new Event('input', { bubbles: true});
+            eachBlockTextArea.dispatchEvent(ev2);
+            */
             blockCtr++;
         }
     }
@@ -155,10 +147,10 @@ if(1==2)
                     if(x == 0)
                     {
                         //console.log('Exited x loop');
-                        //var neweachBlockDiv = arrPageContentBlocks[x];
-                        //console.log(neweachBlockDiv);
+                        //var newEachBlockSpan = arrPageContentBlocks[x];
+                        //console.log(newEachBlockSpan);
                         break;
-                        //await Mouse.leftClick(neweachBlockDiv);
+                        //await Mouse.leftClick(newEachBlockSpan);
                         var newEachBlock = getActiveEditElement();
                         //console.log(newEachBlock);
                         break;
