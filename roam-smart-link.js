@@ -19,7 +19,7 @@ async function simulateClick(buttons, element, delayOverride) {
       //console.log(mouseEventType);
     element.dispatchEvent(getMouseEvent(mouseEventType, buttons));
   });
-  return delay(200);
+  return delay(100);
   //await delay(2000);
 }
 
@@ -31,160 +31,165 @@ function setNewValue(curBlock, newValue)
     curBlock.dispatchEvent(ev2);
 }
 
-async function testing(){
-    console.log("start");
-    await simulateClick(1, document.body, 0);
-    var allDivBlocks = document.querySelectorAll("[id*='body-outline']");
-    var element = allDivBlocks[0];
-
-    console.log("1");
-    await simulateClick(1, element, 0);
-    var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
-    var newStuff = eachBlockTextArea.value + " ADDED ON END";
-    setNewValue(eachBlockTextArea, newStuff);
-
-    console.log("2");
-    element = allDivBlocks[1];
-    await simulateClick(1, element, 0);
-    var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
-    var newStuff = eachBlockTextArea.value + " ADDED ON END";
-    setNewValue(eachBlockTextArea, newStuff);
-
-    console.log("3");
-    element = allDivBlocks[2];
-    await simulateClick(1, element, 0);
-    var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
-    var newStuff = eachBlockTextArea.value + " ADDED ON END";
-    setNewValue(eachBlockTextArea, newStuff);
-
-    console.log("4");
-    element = allDivBlocks[3];
-    await simulateClick(1, element, 0);
-    var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
-    var newStuff = eachBlockTextArea.value + " ADDED ON END";
-    setNewValue(eachBlockTextArea, newStuff);
-
-    console.log("5");
-    console.log("END");
-}
-
-//testing();
-
 // ****************************************************************************************
 // ****************************************************************************************
 // ****************************************************************************************
 // ****************************************************************************************
-
-var currentPage = document.title;
-
-if(currentPage == 'All Pages')
+var arrPages = [];
+async function startFunction()
 {
-    var allPages = document.getElementsByClassName("rm-pages-title-col");
-    //console.log(allPages);
-    var arrPages = [];
+    var currentPage = document.title;
 
-    var pageCtr = 0;
-    for (var i = 0; i < allPages.length; i++)
+    if(currentPage == 'All Pages')
     {
-        var eachPageDiv = allPages.item(i);
-        var eachPageLink = eachPageDiv.querySelector("a > strong")
-        if(eachPageLink !== null)
-        {
-            var eachPageName = eachPageLink.textContent;
-            if(eachPageName.length > 0){arrPages.push(eachPageName);}
-            //console.log(eachPageName);
-            pageCtr++;
-        }
-    }
-    console.log(pageCtr);
-    console.log(arrPages.length);
-}
-else if(currentPage !== 'Daily Notes')
-{
-    await simulateClick(1, document.body, 0);
-    //Loop through page with content you want to link
-    //The roam-block class also matches linked references which we don't want to look through so we are filtering on ID with wildcard instead
-    //Each DIV holds each bullet and then the textarea html element is visible only when DIV is clicked
-    //var allBlocks = document.getElementsByClassName("roam-block");
-    var allBlocks = document.querySelectorAll("[id*='body-outline']");
-    var arrPageContentBlocks = [];
-    //Var total text on page
-    var allTextContent = "";
+        var allPages = document.getElementsByClassName("rm-pages-title-col");
+        //console.log(allPages);
 
-    var blockCtr = 0;
-    for (var i = 0; i < allBlocks.length; i++)
-    {
-        var eachBlockDiv = allBlocks.item(i);
-        //console.log(eachBlockDiv);
-        if(eachBlockDiv !== null)
-        {
-            await simulateClick(1, eachBlockDiv, 0);
-            var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
-            var curValue = eachBlockTextArea.value.toString().trim();
-            //var newStuff = curValue + " ADDED ON END";
-            //var eachBlockText = eachBlockTextArea.value;
 
-            arrPageContentBlocks.push(curValue);
-            allTextContent += curValue + ' \n';
-            blockCtr++;
-        }
-    }
-    console.log('blocks: ', blockCtr);
-    console.log('array: ', arrPageContentBlocks.length);
-    console.log('allText: ', allTextContent);
-    //await Mouse.leftClick(document.body);
-if(1==2)
-{
-    //Loop through each page to see if matching any of the content
-    for(var i = 0; i < arrPages.length; i++)
-    {
-        //console.log('I: ', i);
-        if(i > 20){break;}
-        var indivPageName = arrPages[i];
-        //console.log('Page: ', indivPageName);
-        var bMatch = allTextContent.includes(indivPageName);
-        if(bMatch)
+        var pageCtr = 0;
+        for (var i = 0; i < allPages.length; i++)
         {
-            //console.log('Found: ', indivPageName);
-            if(2 == 2)
+            var eachPageDiv = allPages.item(i);
+            var eachPageLink = eachPageDiv.querySelector("a > strong")
+            if(eachPageLink !== null)
             {
-                //Loop through each block to find the matches and decide to tag or not
-                for(var x = 0; x < arrPageContentBlocks.length; x++)
+                var eachPageName = eachPageLink.textContent;
+                if(eachPageName.length > 0){arrPages.push(eachPageName);}
+                //console.log(eachPageName);
+                pageCtr++;
+            }
+        }
+        console.log(pageCtr);
+        console.log(arrPages.length);
+    }
+    else if(currentPage !== 'Daily Notes')
+    {
+        await simulateClick(1, document.body, 0);
+        //Loop through page with content you want to link
+        //The roam-block class also matches linked references which we don't want to look through so we are filtering on ID with wildcard instead
+        //Each DIV holds each bullet and then the textarea html element is visible only when DIV is clicked
+        //var allBlocks = document.getElementsByClassName("roam-block");
+        var allBlocks = document.querySelectorAll("[id*='body-outline']");
+        var arrPageContentBlocks = [];
+        var arrPageContentBlocksId = [];
+        //Var total text on page
+        var allTextContent = "";
+
+        var blockCtr = 0;
+        for (var i = 0; i < allBlocks.length; i++)
+        {
+            var eachBlockDiv = allBlocks.item(i);
+            //console.log(eachBlockDiv);
+            if(eachBlockDiv !== null)
+            {
+                await simulateClick(1, eachBlockDiv, 0);
+                var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
+                var curValue = eachBlockTextArea.value.toString().trim();
+                //var newStuff = curValue + " ADDED ON END";
+                //var eachBlockText = eachBlockTextArea.value;
+
+                arrPageContentBlocks.push(curValue);
+                arrPageContentBlocksId.push(eachBlockDiv.id);
+                allTextContent += curValue + ' \n';
+                blockCtr++;
+            }
+        }
+        await simulateClick(1, document.body, 0);
+        console.log('blocks: ', blockCtr);
+        console.log('array: ', arrPageContentBlocks.length);
+        console.log('allText: ', allTextContent);
+        //await Mouse.leftClick(document.body);
+        var bMatch = false;
+        var indivPageName = "";
+        var neweachBlockDiv = "";
+        var neweachBlockDivId = "";
+
+        //Loop through each page to see if matching any of the content
+        for(var j = 0; j < arrPages.length; j++)
+        {
+            //console.log('J: ', j);
+            //if(j > 20){break;}
+            indivPageName = arrPages[j];
+            //indivPageName = "test";
+            //console.log('Page: ', indivPageName);
+            bMatch = allTextContent.includes(indivPageName);
+            //var bMatch = true;
+            if(bMatch)
+            {
+                console.log('Page: ', indivPageName);
+                //console.log('Found: ', indivPageName);
+                if(2 == 2)
                 {
-                    //console.log('X: ', x);
-                    if(x == 0)
+                    //var allBlocks = document.querySelectorAll("[id*='body-outline']");
+                    //Loop through each block to find the matches and decide to tag or not
+                    for(var k = 0; k < arrPageContentBlocks.length; k++)
                     {
+                        console.log('K: ', k);
+                        //console.log('X: ', x);
                         //console.log('Exited x loop');
-                        //var neweachBlockDiv = arrPageContentBlocks[x];
-                        //console.log(neweachBlockDiv);
-                        break;
-                        //await Mouse.leftClick(neweachBlockDiv);
-                        var newEachBlock = getActiveEditElement();
-                        //console.log(newEachBlock);
-                        break;
-                        if(newEachBlock)
+                        neweachBlockDiv = arrPageContentBlocks[k];
+                        neweachBlockDivId = arrPageContentBlocksId[k];
+                        eachBlockDiv = document.getElementById(neweachBlockDivId);
+                        neweachBlockDiv = eachBlockDiv.innerText; //Actually need to see what the current value is because other links may change this and may have linked to Genesis already so Genesis 43 would not be a match anymore because of [[ ]] around genesis
+                        //Don't want to re-link a page name that is already linked so need to try and match with " " spaces around it OR beginning or end of the block since wouldn't have spaces around both sides.
+                        if(neweachBlockDiv.includes(' ' + indivPageName + ' ') || neweachBlockDiv.substring(0,indivPageName.length) == indivPageName || neweachBlockDiv.substring(neweachBlockDiv.length - indivPageName.length) == indivPageName)
                         {
-                            var eachBlockText = newEachBlock.textContent;
-                            var pLinkPage = Number(prompt(`Block: ${eachBlockText}\n\nTage with page: [[${indivPageName}]]\n\n0 = NO, 1 = YES`, 0));
-                            if(pLinkPage == 1){console.log('Yes replace');}else{console.log('Do NOT replace');}
-                            //console.log('Current text: ',eachBlockText);
-                            /*var newText = `BEFORE ${eachBlockText} AFTER`;
-                            var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
-                            nativeInputValueSetter.call(newEachBlock, newText);
-                            var ev2 = new Event('input', { bubbles: true});
-                            newEachBlock.dispatchEvent(ev2);*/
+                            console.log(neweachBlockDiv);
+                            //eachBlockDiv = document.getElementById(neweachBlockDivId);
+                            console.log(eachBlockDiv);
+                            //console.log(eachBlockDiv.id);
+                            //await simulateClick(1, eachBlockDiv, 0);
+
+                            //var eachBlockDiv = document.getElementById("block-input-R1S40rNV4ANUNdGed7VaElqiO783-body-outline-mJKfFvcl3-NXbG0i6oU");
+                            //var eachBlockDiv = allBlocks.item(k);
+                            await simulateClick(1, eachBlockDiv, 0);
+
+                            eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
+                        console.log(eachBlockTextArea);
+                            curValue = eachBlockTextArea.value.toString().trim();
+
+                                //var eachBlockText = newEachBlock.textContent;
+                                var pLinkPage = Number(window.prompt(`Block: ${neweachBlockDiv}\n\nTag with page: [[${indivPageName}]]\n\n0 = NO, 1 = YES`, 0));
+                                if(pLinkPage == 1)
+                                {
+                                    console.log('Yes replace');
+
+        console.log(eachBlockDiv);
+        console.log(eachBlockTextArea);
+            console.log(curValue);
+                                    var newStuff = neweachBlockDiv.replace(indivPageName,'[[' + indivPageName + ']]');
+                                    console.log(newStuff);
+                                    setNewValue(eachBlockTextArea, newStuff);
+                                }
+                                else
+                                {
+                                    console.log('Do NOT replace');
+                                }
+                            //}
                         }
                     }
                 }
             }
         }
+        console.log('DONE');
     }
-}
-    console.log('DONE');
-}
-else
-{
-    console.log('On Daily Notes page which is too risky to run script against right now!');
+    else
+    {
+        console.log('On Daily Notes page which is too risky to run script against right now!');
+    }
+
+    await simulateClick(1, document.body, 0);
+    console.log('end of file');
 }
 
-console.log('end of file');
+startFunction();
+
+/*
+
+element = allDivBlocks[1];
+await simulateClick(1, element, 0);
+var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
+var newStuff = eachBlockTextArea.value + " ADDED ON END";
+setNewValue(eachBlockTextArea, newStuff);
+
+*/
