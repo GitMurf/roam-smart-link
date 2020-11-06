@@ -14,20 +14,19 @@ const getMouseEvent = (mouseEventType, buttons) =>
     });
 
 async function simulateClick(buttons, element, delayOverride) {
-  const mouseClickEvents = ['mousedown', 'click', 'mouseup'];
-  mouseClickEvents.forEach(mouseEventType => {
-      //console.log(mouseEventType);
-    element.dispatchEvent(getMouseEvent(mouseEventType, buttons));
-  });
-  return delay(100);
-  //await delay(2000);
+    const mouseClickEvents = ['mousedown', 'click', 'mouseup'];
+    mouseClickEvents.forEach(mouseEventType => {
+        //console.log(mouseEventType);
+        element.dispatchEvent(getMouseEvent(mouseEventType, buttons));
+    });
+    return delay(100);
+    //await delay(2000);
 }
 
-function setNewValue(curBlock, newValue)
-{
+function setNewValue(curBlock, newValue) {
     var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
     nativeInputValueSetter.call(curBlock, newValue);
-    var ev2 = new Event('input', { bubbles: true});
+    var ev2 = new Event('input', { bubbles: true });
     curBlock.dispatchEvent(ev2);
 }
 
@@ -36,37 +35,32 @@ function setNewValue(curBlock, newValue)
 // ****************************************************************************************
 // ****************************************************************************************
 var arrPages = [];
-async function startFunction()
-{
+async function startFunction() {
     var currentPage = document.title;
 
-    if(currentPage == 'All Pages')
-    {
+    if (currentPage == 'All Pages') {
         //var allPages = document.getElementsByClassName("rm-pages-title-col");
         //console.log(allPages);
 
 
         var pageCtr = 0;
         var allPages = window.roamAlphaAPI.q('[:find ?e :where [?e :node/title] ]');
-        for (var i = 0; i < allPages.length; i++)
-        {
-                    var eachPageDiv = allPages[i][0];
-                    var pageTitle = window.roamAlphaAPI.pull('[:node/title]',eachPageDiv)[":node/title"]
-                    if(pageTitle !== null)
-            {
-                        if(pageTitle.length > 0){arrPages.push(pageTitle);}
-                        console.log(pageTitle);
+        for (var i = 0; i < allPages.length; i++) {
+            var eachPageDiv = allPages[i][0];
+            var pageTitle = window.roamAlphaAPI.pull('[:node/title]', eachPageDiv)[":node/title"]
+            if (pageTitle !== null) {
+                if (pageTitle.length > 0) { arrPages.push(pageTitle); }
+                //console.log(pageTitle);
                 pageCtr++;
             }
 
-                    if(i > 20){break;}
+            //if (i > 20) { break; }
         }
 
         console.log(pageCtr);
         console.log(arrPages.length);
     }
-    else if(currentPage !== 'Daily Notes')
-    {
+    else if (currentPage !== 'Daily Notes') {
         await simulateClick(1, document.body, 0);
         //Loop through page with content you want to link
         //The roam-block class also matches linked references which we don't want to look through so we are filtering on ID with wildcard instead
@@ -79,12 +73,10 @@ async function startFunction()
         var allTextContent = "";
 
         var blockCtr = 0;
-        for (var i = 0; i < allBlocks.length; i++)
-        {
+        for (var i = 0; i < allBlocks.length; i++) {
             var eachBlockDiv = allBlocks.item(i);
             //console.log(eachBlockDiv);
-            if(eachBlockDiv !== null)
-            {
+            if (eachBlockDiv !== null) {
                 await simulateClick(1, eachBlockDiv, 0);
                 var eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
                 var curValue = eachBlockTextArea.value.toString().trim();
@@ -108,25 +100,30 @@ async function startFunction()
         var neweachBlockDivId = "";
 
         //Loop through each page to see if matching any of the content
-        for(var j = 0; j < arrPages.length; j++)
-        {
+        for (var j = 0; j < arrPages.length; j++) {
             //console.log('J: ', j);
             //if(j > 20){break;}
             indivPageName = arrPages[j];
             //indivPageName = "test";
             //console.log('Page: ', indivPageName);
             bMatch = allTextContent.includes(indivPageName);
+            bMatchCase = allTextContent.toLowerCase().includes(indivPageName.toLowerCase());
+            bMatchPlural = allTextContent.includes(indivPageName + 's');
+            bMatchPluralCase = allTextContent.toLowerCase().includes(indivPageName.toLowerCase() + 's');
+            //Need to add a fuzzy one that looks for the individual word(s) to see if matches a larger page name. Like Power Automate matched Microsoft power automate
+            //bMatchFuzzy = allTextContent.includes(indivPageName);
             //var bMatch = true;
-            if(bMatch)
-            {
+            if (bMatch || bMatchCase || bMatchPlural || bMatchPluralCase) {
+                if (bMatch) { console.log('bMatch') }
+                if (bMatchCase) { console.log('bMatchCase') }
+                if (bMatchPlural) { console.log('bMatchPlural') }
+                if (bMatchPluralCase) { console.log('bMatchPluralCase') }
                 console.log('Page: ', indivPageName);
                 //console.log('Found: ', indivPageName);
-                if(2 == 2)
-                {
+                if (2 == 2) {
                     //var allBlocks = document.querySelectorAll("[id*='body-outline']");
                     //Loop through each block to find the matches and decide to tag or not
-                    for(var k = 0; k < arrPageContentBlocks.length; k++)
-                    {
+                    for (var k = 0; k < arrPageContentBlocks.length; k++) {
                         console.log('K: ', k);
                         //console.log('X: ', x);
                         //console.log('Exited x loop');
@@ -135,8 +132,7 @@ async function startFunction()
                         eachBlockDiv = document.getElementById(neweachBlockDivId);
                         neweachBlockDiv = eachBlockDiv.innerText; //Actually need to see what the current value is because other links may change this and may have linked to Genesis already so Genesis 43 would not be a match anymore because of [[ ]] around genesis
                         //Don't want to re-link a page name that is already linked so need to try and match with " " spaces around it OR beginning or end of the block since wouldn't have spaces around both sides.
-                        if(neweachBlockDiv.includes(' ' + indivPageName + ' ') || neweachBlockDiv.substring(0,indivPageName.length) == indivPageName || neweachBlockDiv.substring(neweachBlockDiv.length - indivPageName.length) == indivPageName)
-                        {
+                        if (neweachBlockDiv.includes(' ' + indivPageName + ' ') || neweachBlockDiv.substring(0, indivPageName.length) == indivPageName || neweachBlockDiv.substring(neweachBlockDiv.length - indivPageName.length) == indivPageName) {
                             console.log(neweachBlockDiv);
                             //eachBlockDiv = document.getElementById(neweachBlockDivId);
                             console.log(eachBlockDiv);
@@ -148,26 +144,24 @@ async function startFunction()
                             await simulateClick(1, eachBlockDiv, 0);
 
                             eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
-                        console.log(eachBlockTextArea);
+                            console.log(eachBlockTextArea);
                             curValue = eachBlockTextArea.value.toString().trim();
 
-                                //var eachBlockText = newEachBlock.textContent;
-                                var pLinkPage = Number(window.prompt(`Block: ${neweachBlockDiv}\n\nTag with page: [[${indivPageName}]]\n\n0 = NO, 1 = YES`, 0));
-                                if(pLinkPage == 1)
-                                {
-                                    console.log('Yes replace');
+                            //var eachBlockText = newEachBlock.textContent;
+                            var pLinkPage = Number(window.prompt(`Block: ${neweachBlockDiv}\n\nTag with page: [[${indivPageName}]]\n\n0 = NO, 1 = YES`, 0));
+                            if (pLinkPage == 1) {
+                                console.log('Yes replace');
 
-        console.log(eachBlockDiv);
-        console.log(eachBlockTextArea);
-            console.log(curValue);
-                                    var newStuff = neweachBlockDiv.replace(indivPageName,'[[' + indivPageName + ']]');
-                                    console.log(newStuff);
-                                    setNewValue(eachBlockTextArea, newStuff);
-                                }
-                                else
-                                {
-                                    console.log('Do NOT replace');
-                                }
+                                console.log(eachBlockDiv);
+                                console.log(eachBlockTextArea);
+                                console.log(curValue);
+                                var newStuff = neweachBlockDiv.replace(indivPageName, '[[' + indivPageName + ']]');
+                                console.log(newStuff);
+                                setNewValue(eachBlockTextArea, newStuff);
+                            }
+                            else {
+                                console.log('Do NOT replace');
+                            }
                             //}
                         }
                     }
@@ -176,8 +170,7 @@ async function startFunction()
         }
         console.log('DONE');
     }
-    else
-    {
+    else {
         console.log('On Daily Notes page which is too risky to run script against right now!');
     }
 
