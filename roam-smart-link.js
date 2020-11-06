@@ -1,4 +1,4 @@
-//v0.1
+//v0.2
 
 async function delay(millis) {
     //console.log("slept");
@@ -42,23 +42,26 @@ async function startFunction()
 
     if(currentPage == 'All Pages')
     {
-        var allPages = document.getElementsByClassName("rm-pages-title-col");
+        //var allPages = document.getElementsByClassName("rm-pages-title-col");
         //console.log(allPages);
 
 
         var pageCtr = 0;
+        var allPages = window.roamAlphaAPI.q('[:find ?e :where [?e :node/title] ]');
         for (var i = 0; i < allPages.length; i++)
         {
-            var eachPageDiv = allPages.item(i);
-            var eachPageLink = eachPageDiv.querySelector("a > strong")
-            if(eachPageLink !== null)
+                    var eachPageDiv = allPages[i][0];
+                    var pageTitle = window.roamAlphaAPI.pull('[:node/title]',eachPageDiv)[":node/title"]
+                    if(pageTitle !== null)
             {
-                var eachPageName = eachPageLink.textContent;
-                if(eachPageName.length > 0){arrPages.push(eachPageName);}
-                //console.log(eachPageName);
+                        if(pageTitle.length > 0){arrPages.push(pageTitle);}
+                        console.log(pageTitle);
                 pageCtr++;
             }
+
+                    if(i > 20){break;}
         }
+
         console.log(pageCtr);
         console.log(arrPages.length);
     }
