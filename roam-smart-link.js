@@ -1,4 +1,4 @@
-//v0.2
+//v0.3 - Converting to use in SmartBlocks
 
 async function delay(millis) {
     //console.log("slept");
@@ -36,7 +36,7 @@ function compareMatch(lookForVal, insideOfVal) {
     var origInsideOfVal = insideOfVal;
     var foundMatchString = '';
     //Don't want to re-link a page name that is already linked so need to try and match with " " spaces around it OR beginning or end of the block since wouldn't have spaces around both sides.
-    //Exact match: middle, full block, beginningn of block, or end of block
+    //Exact match: middle, full block, beginning of block, or end of block
     if (insideOfVal.includes(' ' + lookForVal + ' ') || insideOfVal == lookForVal || insideOfVal.substring(0, lookForVal.length + 1) == (lookForVal + ' ') || insideOfVal.substring(insideOfVal.length - lookForVal.length - 1) == (' ' + lookForVal)) {
         foundMatchString = lookForVal;
         return ['Exact', foundMatchString];
@@ -48,7 +48,7 @@ function compareMatch(lookForVal, insideOfVal) {
         foundMatchString = origInsideOfVal.substr(insideOfVal.toLowerCase().indexOf(lookForVal.toLowerCase()), lookForVal.length);
         return ['Case', foundMatchString];
     }
-    //Plural match: all combos of add/subract "s"
+    //Plural match: all combos of add/subtract "s"
     insideOfVal = origInsideOfVal;
     lookForVal = origLookForVal + 's';
     if (insideOfVal.includes(' ' + lookForVal + ' ') || insideOfVal == lookForVal || insideOfVal.substring(0, lookForVal.length + 1) == (lookForVal + ' ') || insideOfVal.substring(insideOfVal.length - lookForVal.length - 1) == (' ' + lookForVal)) {
@@ -64,7 +64,7 @@ function compareMatch(lookForVal, insideOfVal) {
             return ['Plural', foundMatchString];
         }
     }
-    //Plural AND case match: all combos of add/subract "s" and also make it all lower case
+    //Plural AND case match: all combos of add/subtract "s" and also make it all lower case
     insideOfVal = origInsideOfVal.toLowerCase();
     lookForVal = (origLookForVal + 's').toLowerCase();
     if (insideOfVal.includes(' ' + lookForVal + ' ') || insideOfVal == lookForVal || insideOfVal.substring(0, lookForVal.length + 1) == (lookForVal + ' ') || insideOfVal.substring(insideOfVal.length - lookForVal.length - 1) == (' ' + lookForVal)) {
@@ -172,7 +172,7 @@ async function startFunction() {
             bMatchCase = allTextContent.toLowerCase().includes(indivPageName.toLowerCase());
             bMatchPlural = allTextContent.includes(indivPageName + 's');
             bMatchPluralCase = allTextContent.toLowerCase().includes(indivPageName.toLowerCase() + 's');
-            if(!bMatchPluralCase && indivPageName.substr(-1) == 's'){bMatchPluralCase = allTextContent.toLowerCase().includes(indivPageName.substring(0, indivPageName.length - 1).toLowerCase());}
+            if (!bMatchPluralCase && indivPageName.substr(-1) == 's') { bMatchPluralCase = allTextContent.toLowerCase().includes(indivPageName.substring(0, indivPageName.length - 1).toLowerCase()); }
             //Need to add a fuzzy one that looks for the individual word(s) to see if matches a larger page name. Like Power Automate matched Microsoft power automate
             //bMatchFuzzy = allTextContent.includes(indivPageName);
             //var bMatch = true;
@@ -240,7 +240,7 @@ async function startFunction() {
                                 console.log(eachBlockTextArea);
                                 curValue = eachBlockTextArea.value.toString().trim();
                                 console.log('curValue: ' + curValue);
-                                if(curValue.toLowerCase().indexOf('[[' + indivPageName.toLowerCase() + ']]') > -1 || curValue.toLowerCase().indexOf('[[' + matchString.toLowerCase() + ']]') > -1){continue;}
+                                if (curValue.toLowerCase().indexOf('[[' + indivPageName.toLowerCase() + ']]') > -1 || curValue.toLowerCase().indexOf('[[' + matchString.toLowerCase() + ']]') > -1) { continue; }
                                 //var eachBlockText = newEachBlock.textContent;
                                 var bpLinkPage = window.confirm(`Block: ${neweachBlockDiv}\n\nMatch Type: ${matchType}\n\nTag with page: [[${indivPageName}]]\n\nOK = YES | Cancel = NO`, 0);
                                 if (bpLinkPage) {
