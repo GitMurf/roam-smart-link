@@ -23,18 +23,91 @@ async function simulateClick(buttons, element, delayOverride) {
     //await delay(2000);
 }
 
-function setNewValue(curBlock, newValue) {
+async function setNewValue(curBlock, newValue) {
     var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
     nativeInputValueSetter.call(curBlock, newValue);
     var ev2 = new Event('input', { bubbles: true });
     curBlock.dispatchEvent(ev2);
+    return delay(100);
+}
+
+function compareMatch(lookForVal, insideOfVal) {
+    var origLookForVal = lookForVal;
+    var origInsideOfVal = insideOfVal;
+    var foundMatchString = '';
+    //Don't want to re-link a page name that is already linked so need to try and match with " " spaces around it OR beginning or end of the block since wouldn't have spaces around both sides.
+    //Exact match: middle, full block, beginningn of block, or end of block
+    if (insideOfVal.includes(' ' + lookForVal + ' ') || insideOfVal == lookForVal || insideOfVal.substring(0, lookForVal.length + 1) == (lookForVal + ' ') || insideOfVal.substring(insideOfVal.length - lookForVal.length - 1) == (' ' + lookForVal)) {
+        foundMatchString = lookForVal;
+        return ['Exact', foundMatchString];
+    }
+    //Case match: put both to lower case to see if match
+    insideOfVal = insideOfVal.toLowerCase();
+    lookForVal = lookForVal.toLowerCase();
+    if (insideOfVal.includes(' ' + lookForVal + ' ') || insideOfVal == lookForVal || insideOfVal.substring(0, lookForVal.length + 1) == (lookForVal + ' ') || insideOfVal.substring(insideOfVal.length - lookForVal.length - 1) == (' ' + lookForVal)) {
+        foundMatchString = origInsideOfVal.substr(insideOfVal.toLowerCase().indexOf(lookForVal.toLowerCase()), lookForVal.length);
+        return ['Case', foundMatchString];
+    }
+    //Plural match: all combos of add/subract "s"
+    insideOfVal = origInsideOfVal;
+    lookForVal = origLookForVal + 's';
+    if (insideOfVal.includes(' ' + lookForVal + ' ') || insideOfVal == lookForVal || insideOfVal.substring(0, lookForVal.length + 1) == (lookForVal + ' ') || insideOfVal.substring(insideOfVal.length - lookForVal.length - 1) == (' ' + lookForVal)) {
+        foundMatchString = lookForVal;
+        return ['Plural', foundMatchString];
+    }
+    //Plural if page title has 's' on end so want to remove it to match a block with a word without an 's'
+    if (origLookForVal.substr(-1) == 's') {
+        insideOfVal = origInsideOfVal;
+        lookForVal = origLookForVal.substring(0, origLookForVal.length - 1);
+        if (insideOfVal.includes(' ' + lookForVal + ' ') || insideOfVal == lookForVal || insideOfVal.substring(0, lookForVal.length + 1) == (lookForVal + ' ') || insideOfVal.substring(insideOfVal.length - lookForVal.length - 1) == (' ' + lookForVal)) {
+            foundMatchString = lookForVal;
+            return ['Plural', foundMatchString];
+        }
+    }
+    //Plural AND case match: all combos of add/subract "s" and also make it all lower case
+    insideOfVal = origInsideOfVal.toLowerCase();
+    lookForVal = (origLookForVal + 's').toLowerCase();
+    if (insideOfVal.includes(' ' + lookForVal + ' ') || insideOfVal == lookForVal || insideOfVal.substring(0, lookForVal.length + 1) == (lookForVal + ' ') || insideOfVal.substring(insideOfVal.length - lookForVal.length - 1) == (' ' + lookForVal)) {
+        foundMatchString = origInsideOfVal.substr(insideOfVal.indexOf(lookForVal), lookForVal.length);
+        return ['Plural+Case', foundMatchString];
+    }
+    //Plural if page title has 's' on end so want to remove it to match a block with a word without an 's'
+    if (origLookForVal.substr(-1) == 's') {
+        insideOfVal = origInsideOfVal.toLowerCase();
+        lookForVal = origLookForVal.substring(0, origLookForVal.length - 1).toLowerCase();
+        if (insideOfVal.includes(' ' + lookForVal + ' ') || insideOfVal == lookForVal || insideOfVal.substring(0, lookForVal.length + 1) == (lookForVal + ' ') || insideOfVal.substring(insideOfVal.length - lookForVal.length - 1) == (' ' + lookForVal)) {
+            foundMatchString = origInsideOfVal.substr(insideOfVal.indexOf(lookForVal), lookForVal.length);
+            return ['Plural+Case', foundMatchString];
+        }
+    }
+
+    //Need to add other things similar to plural logic with suffixes like "ed" etc. at end.
+
+    return ['', ''];
 }
 
 // ****************************************************************************************
 // ****************************************************************************************
 // ****************************************************************************************
 // ****************************************************************************************
-var arrPages = [];
+if (!arrPages) {
+    var arrPages = [];
+    var pageCtr = 0;
+    var allPages = window.roamAlphaAPI.q('[:find ?e :where [?e :node/title] ]');
+    for (var i = 0; i < allPages.length; i++) {
+        var eachPageDiv = allPages[i][0];
+        var pageTitle = window.roamAlphaAPI.pull('[:node/title]', eachPageDiv)[":node/title"]
+        if (pageTitle !== null) {
+            if (pageTitle.length > 0) { arrPages.push(pageTitle); }
+            //console.log(pageTitle);
+            pageCtr++;
+        }
+        //if (i > 20) { break; }
+    }
+    console.log(pageCtr);
+    console.log(arrPages.length);
+}
+
 async function startFunction() {
     var currentPage = document.title;
 
@@ -43,22 +116,7 @@ async function startFunction() {
         //console.log(allPages);
 
 
-        var pageCtr = 0;
-        var allPages = window.roamAlphaAPI.q('[:find ?e :where [?e :node/title] ]');
-        for (var i = 0; i < allPages.length; i++) {
-            var eachPageDiv = allPages[i][0];
-            var pageTitle = window.roamAlphaAPI.pull('[:node/title]', eachPageDiv)[":node/title"]
-            if (pageTitle !== null) {
-                if (pageTitle.length > 0) { arrPages.push(pageTitle); }
-                //console.log(pageTitle);
-                pageCtr++;
-            }
 
-            //if (i > 20) { break; }
-        }
-
-        console.log(pageCtr);
-        console.log(arrPages.length);
     }
     else if (currentPage !== 'Daily Notes') {
         await simulateClick(1, document.body, 0);
@@ -95,6 +153,9 @@ async function startFunction() {
         console.log('allText: ', allTextContent);
         //await Mouse.leftClick(document.body);
         var bMatch = false;
+        var bMatchCase = false;
+        var bMatchPlural = false;
+        var bMatchPluralCase = false;
         var indivPageName = "";
         var neweachBlockDiv = "";
         var neweachBlockDivId = "";
@@ -106,10 +167,12 @@ async function startFunction() {
             indivPageName = arrPages[j];
             //indivPageName = "test";
             //console.log('Page: ', indivPageName);
+            //These matches are for the entire page (all blocks) just to weed out a good number of the pages from the loop
             bMatch = allTextContent.includes(indivPageName);
             bMatchCase = allTextContent.toLowerCase().includes(indivPageName.toLowerCase());
             bMatchPlural = allTextContent.includes(indivPageName + 's');
             bMatchPluralCase = allTextContent.toLowerCase().includes(indivPageName.toLowerCase() + 's');
+            if(!bMatchPluralCase && indivPageName.substr(-1) == 's'){bMatchPluralCase = allTextContent.toLowerCase().includes(indivPageName.substring(0, indivPageName.length - 1).toLowerCase());}
             //Need to add a fuzzy one that looks for the individual word(s) to see if matches a larger page name. Like Power Automate matched Microsoft power automate
             //bMatchFuzzy = allTextContent.includes(indivPageName);
             //var bMatch = true;
@@ -118,51 +181,89 @@ async function startFunction() {
                 if (bMatchCase) { console.log('bMatchCase') }
                 if (bMatchPlural) { console.log('bMatchPlural') }
                 if (bMatchPluralCase) { console.log('bMatchPluralCase') }
-                console.log('Page: ', indivPageName);
+                console.log('Page: ' + indivPageName);
                 //console.log('Found: ', indivPageName);
                 if (2 == 2) {
                     //var allBlocks = document.querySelectorAll("[id*='body-outline']");
-                    //Loop through each block to find the matches and decide to tag or not
-                    for (var k = 0; k < arrPageContentBlocks.length; k++) {
-                        console.log('K: ', k);
-                        //console.log('X: ', x);
-                        //console.log('Exited x loop');
-                        neweachBlockDiv = arrPageContentBlocks[k];
-                        neweachBlockDivId = arrPageContentBlocksId[k];
-                        eachBlockDiv = document.getElementById(neweachBlockDivId);
-                        neweachBlockDiv = eachBlockDiv.innerText; //Actually need to see what the current value is because other links may change this and may have linked to Genesis already so Genesis 43 would not be a match anymore because of [[ ]] around genesis
-                        //Don't want to re-link a page name that is already linked so need to try and match with " " spaces around it OR beginning or end of the block since wouldn't have spaces around both sides.
-                        if (neweachBlockDiv.includes(' ' + indivPageName + ' ') || neweachBlockDiv.substring(0, indivPageName.length) == indivPageName || neweachBlockDiv.substring(neweachBlockDiv.length - indivPageName.length) == indivPageName) {
+                    //Loop through everything multiple times as first time checks exact matches... then case... then plural... then fuzzy
+                    for (let y = 0; y < 4; y++) {
+                        if (y == 0) {
+                            if (!bMatch) { continue; }
+                            console.log('Replacing exact match...')
+                        }
+                        if (y > 0 && bMatch) { continue; }
+                        if (y == 1) {
+                            if (!bMatchCase) { continue; }
+                            console.log('Replacing case match...')
+                        }
+                        if (y > 1 && bMatchCase) { continue; }
+                        if (y == 2) {
+                            if (!bMatchPlural) { continue; }
+                            console.log('Replacing plural match...')
+                        }
+                        if (y > 2 && bMatchPlural) { continue; }
+                        if (y == 3) {
+                            if (!bMatchPluralCase) { continue; }
+                            console.log('Replacing case and plural match...')
+                        }
+                        //Loop through each block to find the matches and decide to tag or not
+                        for (var k = 0; k < arrPageContentBlocks.length; k++) {
+                            console.log('K: ', k);
+                            //console.log('X: ', x);
+                            //console.log('Exited x loop');
+                            neweachBlockDiv = arrPageContentBlocks[k];
+                            neweachBlockDivId = arrPageContentBlocksId[k];
+                            eachBlockDiv = document.getElementById(neweachBlockDivId);
+                            neweachBlockDiv = eachBlockDiv.innerText; //Actually need to see what the current value is because other links may change this and may have linked to Genesis already so Genesis 43 would not be a match anymore because of [[ ]] around genesis
+                            console.log('**************************************************')
                             console.log(neweachBlockDiv);
-                            //eachBlockDiv = document.getElementById(neweachBlockDivId);
+                            console.log('**************************************************')
                             console.log(eachBlockDiv);
-                            //console.log(eachBlockDiv.id);
-                            //await simulateClick(1, eachBlockDiv, 0);
-
-                            //var eachBlockDiv = document.getElementById("block-input-R1S40rNV4ANUNdGed7VaElqiO783-body-outline-mJKfFvcl3-NXbG0i6oU");
-                            //var eachBlockDiv = allBlocks.item(k);
-                            await simulateClick(1, eachBlockDiv, 0);
-
-                            eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
-                            console.log(eachBlockTextArea);
-                            curValue = eachBlockTextArea.value.toString().trim();
-
-                            //var eachBlockText = newEachBlock.textContent;
-                            var pLinkPage = Number(window.prompt(`Block: ${neweachBlockDiv}\n\nTag with page: [[${indivPageName}]]\n\n0 = NO, 1 = YES`, 0));
-                            if (pLinkPage == 1) {
-                                console.log('Yes replace');
-
+                            console.log(neweachBlockDivId);
+                            var matchResult = compareMatch(indivPageName, neweachBlockDiv);
+                            var matchType = matchResult[0];
+                            var matchString = matchResult[1];
+                            if (matchType != '') {
+                                console.log(matchType);
+                                console.log(matchString);
+                                console.log(neweachBlockDiv);
+                                //eachBlockDiv = document.getElementById(neweachBlockDivId);
                                 console.log(eachBlockDiv);
+                                //console.log(eachBlockDiv.id);
+                                //await simulateClick(1, eachBlockDiv, 0);
+
+                                //var eachBlockDiv = document.getElementById("block-input-R1S40rNV4ANUNdGed7VaElqiO783-body-outline-mJKfFvcl3-NXbG0i6oU");
+                                //var eachBlockDiv = allBlocks.item(k);
+                                await simulateClick(1, eachBlockDiv, 0);
+
+                                eachBlockTextArea = document.querySelectorAll(".rm-block-input").item(0);
                                 console.log(eachBlockTextArea);
-                                console.log(curValue);
-                                var newStuff = neweachBlockDiv.replace(indivPageName, '[[' + indivPageName + ']]');
-                                console.log(newStuff);
-                                setNewValue(eachBlockTextArea, newStuff);
+                                curValue = eachBlockTextArea.value.toString().trim();
+                                console.log('curValue: ' + curValue);
+                                if(curValue.toLowerCase().indexOf('[[' + indivPageName.toLowerCase() + ']]') > -1 || curValue.toLowerCase().indexOf('[[' + matchString.toLowerCase() + ']]') > -1){continue;}
+                                //var eachBlockText = newEachBlock.textContent;
+                                var bpLinkPage = window.confirm(`Block: ${neweachBlockDiv}\n\nMatch Type: ${matchType}\n\nTag with page: [[${indivPageName}]]\n\nOK = YES | Cancel = NO`, 0);
+                                if (bpLinkPage) {
+                                    console.log('Yes replace');
+                                    console.log(eachBlockDiv);
+                                    console.log(eachBlockTextArea);
+                                    console.log(curValue);
+
+                                    if (matchType == 'Exact' || matchType == 'Case') {
+                                        var newStuff = curValue.replace(matchString, '[[' + indivPageName + ']]');
+                                    } else { //Alias match
+                                        var newStuff = curValue.replace(matchString, '[' + matchString + ']([[' + indivPageName + ']])');
+                                    }
+                                    console.log(newStuff);
+                                    await setNewValue(eachBlockTextArea, newStuff);
+                                }
+                                else {
+                                    console.log('Do NOT replace');
+                                    var bpSkipRest = window.confirm(`Do you want to skip linking of [[${indivPageName}]] for the remaining blocks as well?\n\nOK = SKIP | Cancel = Continue`, 0);
+                                    if (bpSkipRest) { break; }
+                                }
+                                //}
                             }
-                            else {
-                                console.log('Do NOT replace');
-                            }
-                            //}
                         }
                     }
                 }
